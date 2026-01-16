@@ -1,0 +1,26 @@
+/* -------------------- BODY -------------------- */
+body {
+    background-color: #222;
+    color: #eee;
+    font-family: sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+
+/* -------------------- GRID CONTAINER -------------------- */
+#grid {
+    display: grid;
+    grid-template-columns: repeat(150, 5px);
+    grid-template-rows: repeat(150, 5px);
+    margin: 20px auto;
+    user-select: none;
+    -webkit-user-drag: none;
+    cursor: crosshair;
+}
+
+/* -------------------- GRID CELLS -------------------- */
+.cell {
+    width: 5px;
+    height: 5px;
+}
