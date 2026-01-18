@@ -1,6 +1,6 @@
-const rows = 150;
-const cols = 150;
-const cellSize = 5;
+const rows = 100;
+const cols = 100;
+const cellSize = 7;
 
 const gridElement = document.getElementById("grid");
 const grid = [];
@@ -13,21 +13,30 @@ const keys = {};
 
 const udir = 69696969696969420;
 
-const types = [
-    {
-        index: 0,
+const indexes = {
+    empty: 0,
+    stone: 1,
+    sand: 2,
+    mud: 3,
+    water: 4,
+    lava: 5
+}
+
+const types = {
+    empty: {
+        index: indexes.empty,
         color: "rgb(0,0,0)",
         dirs: [],
         test: []
     },
-    {
-        index: 1,
+    stone: {
+        index: indexes.stone,
         color: "rgb(63, 63, 63)",
         dirs: [],
         test: []
     },
-    {
-        index: 2,
+    sand: {
+        index: indexes.sand,
         color: "rgb(255,217,0)",
         dirs: [
             [1, 0],   // down
@@ -36,48 +45,48 @@ const types = [
         ],
         test: [
             {
-                gt: 0,
-                turns: 2,
-                leaves: 0,
+                gt: indexes.empty,
+                turns: indexes.sand,
+                leaves: indexes.empty,
                 chance: 0.1
             },
             {
-                gt: 4,
-                turns: 3,
-                leaves: 0,
+                gt: indexes.water,
+                turns: indexes.mud,
+                leaves: indexes.empty,
                 chance: 0.3
             }
         ]
     },
-    {
-        index: 3,
+    mud: {
+        index: indexes.mud,
         color: "rgb(156, 102, 0)",
         dirs: [
             [1, 0]
         ],
         test: [
             {
-                gt: 0,
-                turns: 2,
-                leaves: 0,
+                gt: indexes.empty,
+                turns: indexes.mud,
+                leaves: indexes.empty,
                 chance: 0.1
             },
             {
-                gt: 4,
-                turns: 3,
-                leaves: 4,
+                gt: indexes.water,
+                turns: indexes.mud,
+                leaves: indexes.water,
                 chance: 0.5
             },
             {
-                gt: 2,
-                turns: 3,
-                leaves: 2,
+                gt: indexes.sand,
+                turns: indexes.mud,
+                leaves: indexes.sand,
                 chance: 0.8
             }
         ]
     },
-    {
-        index: 4,
+    water: {
+        index: indexes.water,
         color: "rgb(0, 38, 255)",
         dirs: [
             [1, 0],   // down
@@ -88,21 +97,21 @@ const types = [
         ],
         test: [
             {
-                gt: 0,
-                turns: 4,
-                leaves: 0,
+                gt: indexes.empty,
+                turns: indexes.water,
+                leaves: indexes.empty,
                 chance: 0.1
             },
             {
-                gt: 2,
-                turns: 3,
-                leaves: 0,
+                gt: indexes.sand,
+                turns: indexes.mud,
+                leaves: indexes.empty,
                 chance: 0.7
             }
         ]
     },
-    {
-        index: 5,
+    lava: {
+        index: indexes.lava,
         color: "rgb(221, 44, 0)",
         dirs: [
             [1, 0],   // down
@@ -113,20 +122,20 @@ const types = [
         ],
         test: [
             {
-                gt: 0,
-                turns: 5,
-                leaves: 0,
+                gt: indexes.empty,
+                turns: indexes.lava,
+                leaves: indexes.empty,
                 chance: 0.3
             },
             {
-                gt: 4,
-                turns: 1,
-                leaves: 0,
+                gt: indexes.water,
+                turns: indexes.stone,
+                leaves: indexes.empty,
                 chance: 0.5
             }
         ]
     }
-];
+};
 
 let isMouseDown = false;
 
@@ -200,7 +209,7 @@ function start() {
 function render() {
     for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
-            for (let type of types) {
+            for (const [key, type] of Object.entries(types)) {
                 if (grid[y][x] === type.index){
                     cells[y][x].style.background = type.color;
                 }
@@ -212,7 +221,7 @@ function render() {
 function update() {
     for (let y = rows - 1; y >= 0; y--) {
         for (let x = 0; x < cols; x++) {
-            for (let type of types) {
+            for (const [key, type] of Object.entries(types)) {
                 let moved = false;
                 if (grid[y][x] !== type.index) continue;
 
