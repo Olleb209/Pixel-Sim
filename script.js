@@ -19,7 +19,8 @@ const indexes = {
     sand: 2,
     mud: 3,
     water: 4,
-    lava: 5
+    lava: 5,
+    steam: 6
 }
 
 const types = {
@@ -29,12 +30,14 @@ const types = {
         dirs: [],
         test: []
     },
+    // Solid
     stone: {
         index: indexes.stone,
         color: "rgb(63, 63, 63)",
         dirs: [],
         test: []
     },
+    // dust
     sand: {
         index: indexes.sand,
         color: "rgb(255,217,0)",
@@ -85,6 +88,7 @@ const types = {
             }
         ]
     },
+    // liquid
     water: {
         index: indexes.water,
         color: "rgb(0, 38, 255)",
@@ -107,6 +111,12 @@ const types = {
                 turns: indexes.mud,
                 leaves: indexes.empty,
                 chance: 0.7
+            },
+            {
+                gt: indexes.lava,
+                turns: indexes.stone,
+                leaves: indexes.steam,
+                chance: 0.1
             }
         ]
     },
@@ -130,8 +140,40 @@ const types = {
             {
                 gt: indexes.water,
                 turns: indexes.stone,
-                leaves: indexes.empty,
+                leaves: indexes.steam,
                 chance: 0.5
+            }
+        ]
+    },
+    // gas
+    steam: {
+        index: indexes.steam,
+        color: "rgb(160, 160, 160)",
+        dirs: [
+            [-1, 0],  
+            [-1, udir], 
+            [-1, udir],
+            [0, udir],
+            [0, udir]
+        ],
+        test: [
+            {
+                gt: indexes.empty,
+                turns: indexes.steam,
+                leaves: indexes.empty,
+                chance: 0.2
+            },
+            {
+                gt: indexes.water,
+                turns: indexes.steam,
+                leaves: indexes.water,
+                chance: 0.15
+            },
+            {
+                gt: indexes.lava,
+                turns: indexes.steam,
+                leaves: indexes.lava,
+                chance: 0.25
             }
         ]
     }
@@ -219,37 +261,52 @@ function render() {
 }
 
 function update() {
+    // --- Update solids and liquids ---
     for (let y = rows - 1; y >= 0; y--) {
         for (let x = 0; x < cols; x++) {
             for (const [key, type] of Object.entries(types)) {
-                let moved = false;
-                if (grid[y][x] !== type.index) continue;
-
-                // random horizontal choice for this update
-                let randDir = Math.random() < 0.5 ? -1 : 1;
-
-                for (let dir of type.dirs) {
-                    let dx = dir[1];
-                    if (dx === udir) dx = randDir; // replace udir with random left/right
-                    const nx = x + dx;
-                    const ny = y + dir[0];
-                    
-                    if (!type.test) continue;
-                    for (let g of type.test) {
-                        if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
-                            if (grid[ny][nx] === g.gt && g.chance < Math.random()) {
-                                grid[ny][nx] = g.turns;
-                                grid[y][x] = g.leaves;
-                                moved = true;
-                                break; // stop checking dirs
-                            }
-                        }
-                    }
-                    if (moved) break;
-                }
-                if (moved) break;
+                if (type.index === indexes.steam) continue; // skip gases here
+                moveCell(x, y, type);
             }
         }
+    }
+
+    // --- Update gases separately ---
+    for (let y = 0; y < rows; y++) { // gases usually go up
+        for (let x = 0; x < cols; x++) {
+            for (const [key, type] of Object.entries(types)) {
+                if (type.index !== indexes.steam) continue;
+                moveCell(x, y, type);
+            }
+        }
+    }
+}
+
+// Helper to move a cell based on its type
+function moveCell(x, y, type) {
+    let moved = false;
+    if (grid[y][x] !== type.index) return;
+
+    let randDir = Math.random() < 0.5 ? -1 : 1;
+
+    for (let dir of type.dirs) {
+        let dx = dir[1];
+        if (dx === udir) dx = randDir;
+        const nx = x + dx;
+        const ny = y + dir[0];
+
+        if (!type.test) continue;
+        for (let g of type.test) {
+            if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
+                if (grid[ny][nx] === g.gt && g.chance < Math.random()) {
+                    grid[ny][nx] = g.turns;
+                    grid[y][x] = g.leaves;
+                    moved = true;
+                    break;
+                }
+            }
+        }
+        if (moved) break;
     }
 }
 
