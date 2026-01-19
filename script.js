@@ -231,6 +231,18 @@ function start() {
     gridElement.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
     gridElement.style.gridTemplateRows = `repeat(${rows}, ${cellSize}px)`;
 
+    const container = document.getElementById("buttonsContainer");
+
+    for (let [key, value] of types) {
+        const button = document.createElement("button");
+
+        button.textContent = key;
+
+        button.addEventListener("click", function() {
+            currentType = value.index;
+        });
+    }
+
     for (let y = 0; y < rows; y++) {
         grid[y] = [];
         cells[y] = [];
