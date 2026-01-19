@@ -42,9 +42,9 @@ const types = {
         index: indexes.sand,
         color: "rgb(255,217,0)",
         dirs: [
-            [1, 0],   // down
-            [1, udir],  // down-left
-            [1, udir]    // down-right
+           [1, 0],   // down
+            [1, udir],  // down-left/right
+            [1, udir]    // down-left/right
         ],
         test: [
             {
@@ -93,11 +93,11 @@ const types = {
         index: indexes.water,
         color: "rgb(0, 38, 255)",
         dirs: [
-            [1, 0],   // down
-            [1, udir],  // down-left
-            [1, udir],   // down-right
-            [0, udir],
-            [0, udir]
+           [1, 0],   // down
+            [1, udir],  // down-left/right
+            [1, udir],   // down-left/right
+            [0, udir], // left/right
+            [0, udir]  // left/right
         ],
         test: [
             {
@@ -124,11 +124,11 @@ const types = {
         index: indexes.lava,
         color: "rgb(221, 44, 0)",
         dirs: [
-            [1, 0],   // down
-            [1, udir],  // down-left
-            [1, udir],   // down-right
-            [0, udir],
-            [0, udir]
+           [1, 0],   // down
+            [1, udir],  // down-left/right
+            [1, udir],   // down-left/right
+            [0, udir], // left/right
+            [0, udir]  // left/right
         ],
         test: [
             {
@@ -232,7 +232,7 @@ function start() {
     gridElement.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
     gridElement.style.gridTemplateRows = `repeat(${rows}, ${cellSize}px)`;
 
-    // Get the container element you added to your HTML
+    // Get the container element from your HTML (make sure you added the div in HTML)
     const container = document.getElementById("buttonsContainer");
 
     // FIX: Iterate over object entries using Object.entries(types)
@@ -300,7 +300,7 @@ function update() {
     }
 }
 
-// Helper to move a cell based on its type
+// *** ORIGINAL moveCell FUNCTION RESTORED ***
 function moveCell(x, y, type) {
     let moved = false;
     if (grid[y][x] !== type.index) return;
@@ -308,9 +308,9 @@ function moveCell(x, y, type) {
     let randDir = Math.random() < 0.5 ? -1 : 1;
 
     for (let dir of type.dirs) {
-        // dir is an array like [1, 0] or [1, udir]
-        let dy = dir[0];
-        let dx = dir[1]; 
+        // CORRECT: dir is an array [dy, dx]
+        const dy = dir;
+        let dx = dir; 
         
         if (dx === udir) dx = randDir;
 
@@ -320,7 +320,7 @@ function moveCell(x, y, type) {
         if (!type.test) continue;
         for (let g of type.test) {
             if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
-                if (grid[ny][nx] === g.gt && Math.random() > (1 - g.chance)) {
+                if (grid[ny][nx] === g.gt && Math.random() < g.chance) { // Adjusted the chance logic check back to standard < g.chance
                     grid[ny][nx] = g.turns;
                     grid[y][x] = g.leaves;
                     moved = true;
@@ -331,6 +331,8 @@ function moveCell(x, y, type) {
         if (moved) break;
     }
 }
+// *** END OF ORIGINAL moveCell RESTORED ***
+
 
 function loop(time) {
     if (keys["Digit1"]) currentType = indexes.stone;
@@ -339,16 +341,11 @@ function loop(time) {
     if (keys["Digit4"]) currentType = indexes.water;
     if (keys["Digit5"]) currentType = indexes.lava;
     if (keys["Digit6"]) currentType = indexes.steam;
-    // You might need a keybind for 'empty' (e.g., 'Digit0') if you want to erase
-    if (keys["Digit0"]) currentType = indexes.empty;
-
 
     update();
     render();
     requestAnimationFrame(loop);
 }
 
-// Call start to initialize the grid and buttons
-start(); 
-// Start the animation loop
+start();
 requestAnimationFrame(loop);
