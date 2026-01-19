@@ -227,43 +227,28 @@ function drawCircleAtCursor(e) {
 }
 
 function start() {
-    // ... existing initialization code ...
     gridElement.style.display = "grid";
     gridElement.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
     gridElement.style.gridTemplateRows = `repeat(${rows}, ${cellSize}px)`;
 
-    // Get the container element where you want to place the buttons
     const container = document.getElementById("buttonsContainer");
 
-    // FIX: Iterate over object entries using Object.entries(types)
-    for (const [key, value] of Object.entries(types)) {
+    for (let [key, value] of types) {
         const button = document.createElement("button");
-        
-        // Use the 'key' (e.g., "empty", "stone") as the button text
-        button.textContent = key; 
-        
-        // Add a class for styling if needed (optional)
-        button.classList.add("material-button");
-        
-        // Add an event listener to set the currentType when clicked
+
+        button.textContent = key;
+
         button.addEventListener("click", function() {
             currentType = value.index;
-            // Optional: Add visual feedback for the active button here
-            console.log("Current type set to: " + key);
         });
-
-        // Append the newly created button to the container
-        container.appendChild(button);
     }
-
-    // ... rest of your start function for initializing the grid ...
 
     for (let y = 0; y < rows; y++) {
         grid[y] = [];
         cells[y] = [];
         for (let x = 0; x < cols; x++) {
             grid[y][x] = 0;
-            // ... (rest of cell creation logic) ...
+
             const cell = document.createElement("div");
             cell.style.width = cellSize + "px";
             cell.style.height = cellSize + "px";
