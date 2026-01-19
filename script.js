@@ -235,30 +235,6 @@ function start() {
     gridElement.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
     gridElement.style.gridTemplateRows = `repeat(${rows}, ${cellSize}px)`;
 
-    // The buttonsContainer must exist in the HTML for this to work
-    // Since you didn't include it in your HTML snippet, 
-    // we will add the buttons just above the grid element.
-    const container = document.createElement('div');
-    container.id = 'buttonsContainer';
-    document.body.insertBefore(container, gridElement);
-
-    // Loop through the types object using Object.entries
-    for (const [key, value] of Object.entries(types)) {
-        const button = document.createElement("button");
-
-        button.textContent = key.charAt(0).toUpperCase() + key.slice(1); // Capitalize the first letter
-
-        button.addEventListener("click", function() {
-            currentType = value.index;
-            console.log("Switched to: " + key);
-        });
-
-        container.appendChild(button);
-    }
-    // *** END OF BUTTON GENERATION ***
-
-
-    // Initialize the grid data structure and DOM elements
     for (let y = 0; y < rows; y++) {
         grid[y] = [];
         cells[y] = [];
