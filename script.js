@@ -7,13 +7,11 @@ const grid = [];
 const cells = [];
 
 let brushRadius = 5;
-// Default to sand (index 2) as a starting material
-let currentType = 2; 
+let currentType = 3; 
 
 const keys = {};
 
-// Use a string or meaningful value for udir that you can check against later
-const udir = "random_direction"; 
+const udir = 69696969696969420;
 
 const indexes = {
     empty: 0,
@@ -209,7 +207,6 @@ gridElement.addEventListener("mouseleave", e => {
 gridElement.addEventListener("mousemove", e => {
     if (isMouseDown) drawCircleAtCursor(e);
 });
-
 function drawCircleAtCursor(e) {
     const rect = gridElement.getBoundingClientRect();
     const cx = Math.floor((e.clientX - rect.left) / cellSize);
@@ -229,47 +226,48 @@ function drawCircleAtCursor(e) {
     }
 }
 
-// *** MODIFIED START FUNCTION WITH BUTTON GENERATION ***
 function start() {
+    // ... existing initialization code ...
     gridElement.style.display = "grid";
     gridElement.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
     gridElement.style.gridTemplateRows = `repeat(${rows}, ${cellSize}px)`;
 
-    // The buttonsContainer must exist in the HTML for this to work
-    // Since you didn't include it in your HTML snippet, 
-    // we will add the buttons just above the grid element.
-    const container = document.createElement('div');
-    container.id = 'buttonsContainer';
-    document.body.insertBefore(container, gridElement);
+    // Get the container element where you want to place the buttons
+    const container = document.getElementById("buttonsContainer");
 
-    // Loop through the types object using Object.entries
+    // FIX: Iterate over object entries using Object.entries(types)
     for (const [key, value] of Object.entries(types)) {
         const button = document.createElement("button");
-
-        button.textContent = key.charAt(0).toUpperCase() + key.slice(1); // Capitalize the first letter
-
+        
+        // Use the 'key' (e.g., "empty", "stone") as the button text
+        button.textContent = key; 
+        
+        // Add a class for styling if needed (optional)
+        button.classList.add("material-button");
+        
+        // Add an event listener to set the currentType when clicked
         button.addEventListener("click", function() {
             currentType = value.index;
-            console.log("Switched to: " + key);
+            // Optional: Add visual feedback for the active button here
+            console.log("Current type set to: " + key);
         });
 
+        // Append the newly created button to the container
         container.appendChild(button);
     }
-    // *** END OF BUTTON GENERATION ***
 
+    // ... rest of your start function for initializing the grid ...
 
-    // Initialize the grid data structure and DOM elements
     for (let y = 0; y < rows; y++) {
         grid[y] = [];
         cells[y] = [];
         for (let x = 0; x < cols; x++) {
             grid[y][x] = 0;
-
+            // ... (rest of cell creation logic) ...
             const cell = document.createElement("div");
             cell.style.width = cellSize + "px";
             cell.style.height = cellSize + "px";
-            // Set initial background color based on initial type (0, empty)
-            cell.style.background = types.empty.color; 
+            cell.style.background = "black";
 
             gridElement.appendChild(cell);
             cells[y][x] = cell;
@@ -278,48 +276,34 @@ function start() {
 }
 
 function render() {
-    // Optimized render loop to directly access the color from the grid value
     for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
-            const typeIndex = grid[y][x];
-            // Find the correct color efficiently
-            // Note: A map of index->color would be faster, but this works
             for (const [key, type] of Object.entries(types)) {
-                if (type.index === typeIndex){
+                if (grid[y][x] === type.index){
                     cells[y][x].style.background = type.color;
-                    break; // Exit the inner loop once the color is found
                 }
             }
         }
     }
 }
 
-// ... (update and moveCell functions remain the same as you provided) ...
-
 function update() {
     // --- Update solids and liquids ---
-    // Iterate from bottom up for gravity simulation
     for (let y = rows - 1; y >= 0; y--) {
         for (let x = 0; x < cols; x++) {
-            // Check for material types that fall down or spread
-            const typeIndex = grid[y][x];
-            if (typeIndex !== indexes.steam && typeIndex !== indexes.empty && typeIndex !== indexes.stone) {
-                // Find the full type object to pass to moveCell
-                const currentTypeObj = Object.values(types).find(t => t.index === typeIndex);
-                if (currentTypeObj) {
-                    moveCell(x, y, currentTypeObj);
-                }
+            for (const [key, type] of Object.entries(types)) {
+                if (type.index === indexes.steam) continue; // skip gases here
+                moveCell(x, y, type);
             }
         }
     }
 
     // --- Update gases separately ---
-    // Iterate from top down for gas rising simulation
-    for (let y = 0; y < rows; y++) { 
+    for (let y = 0; y < rows; y++) { // gases usually go up
         for (let x = 0; x < cols; x++) {
-            if (grid[y][x] === indexes.steam) {
-                 const steamTypeObj = types.steam;
-                 moveCell(x, y, steamTypeObj);
+            for (const [key, type] of Object.entries(types)) {
+                if (type.index !== indexes.steam) continue;
+                moveCell(x, y, type);
             }
         }
     }
@@ -328,30 +312,24 @@ function update() {
 // Helper to move a cell based on its type
 function moveCell(x, y, type) {
     let moved = false;
-    // Don't move if the cell content doesn't match the type we are processing
-    if (grid[y][x] !== type.index) return; 
+    if (grid[y][x] !== type.index) return;
 
-    // Used to randomize left/right direction for liquids/dusts
     let randDir = Math.random() < 0.5 ? -1 : 1;
 
-    // Shuffle the directions array to reduce grid artifacts/bias
-    const shuffledDirs = [...type.dirs].sort(() => Math.random() - 0.5);
-
-    for (let dir of shuffledDirs) {
+    for (let dir of type.dirs) {
         let dx = dir[1];
-        if (dx === udir) dx = randDir; // Apply random left/right
+        if (dx === udir) dx = randDir;
         const nx = x + dx;
         const ny = y + dir[0];
 
         if (!type.test) continue;
         for (let g of type.test) {
             if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
-                // Check if target cell matches the requirement (g.gt) AND chance passes
-                if (grid[ny][nx] === g.gt && Math.random() > (1 - g.chance)) {
-                    grid[ny][nx] = g.turns; // Target cell becomes this
-                    grid[y][x] = g.leaves;  // Original cell becomes this
+                if (grid[ny][nx] === g.gt && g.chance < Math.random()) {
+                    grid[ny][nx] = g.turns;
+                    grid[y][x] = g.leaves;
                     moved = true;
-                    break; // Stop checking directions once moved
+                    break;
                 }
             }
         }
@@ -360,19 +338,16 @@ function moveCell(x, y, type) {
 }
 
 function loop(time) {
-    if (keys["Digit1"]) currentType = indexes.stone;
-    if (keys["Digit2"]) currentType = indexes.sand;
-    if (keys["Digit3"]) currentType = indexes.mud;
-    if (keys["Digit4"]) currentType = indexes.water;
-    if (keys["Digit5"]) currentType = indexes.lava;
-    if (keys["Digit6"]) currentType = indexes.steam;
-
-    update();
+    if (keys["Digit1"]) currentType = 1;
+    if (keys["Digit2"]) currentType = 2;
+    if (keys["Digit3"]) currentType = 3;
+    if (keys["Digit4"]) currentType = 4;
+    if (keys["Digit5"]) currentType = 5;
+    // Don't call drawCircleAtCursor here!
+    update(); // optional, can be empty
     render();
     requestAnimationFrame(loop);
 }
 
-// Initialize the simulation
 start();
-// Start the main loop
 requestAnimationFrame(loop);
