@@ -16,11 +16,12 @@ const udir = 69696969696969420;
 const indexes = {
     empty: 0,
     stone: 1,
-    sand: 2,
-    mud: 3,
-    water: 4,
-    lava: 5,
-    steam: 6
+    iron: 2,
+    sand: 3,
+    mud: 4,
+    water: 5,
+    lava: 6,
+    steam: 7
 }
 
 const types = {
@@ -34,6 +35,12 @@ const types = {
     stone: {
         index: indexes.stone,
         color: "rgb(63, 63, 63)",
+        dirs: [],
+        test: []
+    },
+    iron: {
+        index: indexes.iron,
+        color: "rgb(134, 134, 134)",
         dirs: [],
         test: []
     },
@@ -311,11 +318,12 @@ function moveCell(x, y, type) {
 }
 
 function loop(time) {
-    if (keys["Digit1"]) currentType = 1;
-    if (keys["Digit2"]) currentType = 2;
-    if (keys["Digit3"]) currentType = 3;
-    if (keys["Digit4"]) currentType = 4;
-    if (keys["Digit5"]) currentType = 5;
+    // FIXED: Use backticks (`) for template literals and Object.keys().length
+    for (let i = 0; i < Object.keys(indexes).length; i++) {
+        if (keys[`Digit${i}`]) {
+            currentType = i;
+        }
+    }
     // Don't call drawCircleAtCursor here!
     update(); // optional, can be empty
     render();
